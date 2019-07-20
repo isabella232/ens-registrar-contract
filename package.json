@@ -1,0 +1,33 @@
+{
+  "name": "@ethvault/ens-manager-contract",
+  "version": "1.0.0",
+  "description": "Ethereum smart contract that manages the ethvault.xyz ENS domain",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ethvault/ens-owner-contract.git"
+  },
+  "keywords": [
+    "ens",
+    "smart",
+    "contract",
+    "manager"
+  ],
+  "author": "Moody Salem <moody.salem@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ethvault/ens-owner-contract/issues"
+  },
+  "homepage": "https://github.com/ethvault/ens-owner-contract#readme",
+  "devDependencies": {
+    "@ensdomains/ens": "^0.3.11",
+    "@ensdomains/resolver": "^0.1.9",
+    "truffle": "^5.0.28"
+  }
+}
