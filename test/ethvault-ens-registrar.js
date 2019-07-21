@@ -20,11 +20,11 @@ async function expectError(func, expectedMessage) {
   try {
     await func();
   } catch (error) {
-    assert.equal(error.message.indexOf(expectedMessage) !== -1, true);
+    assert.equal(error.message.indexOf(expectedMessage) !== -1, true, `expected to find "${expectedMessage}" in "${error.message}"`);
     failed = true;
   }
 
-  assert.equal(failed, true);
+  assert.equal(failed, true, `expected to throw but did not throw`);
 }
 
 contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, account0, account1, account2]) {
@@ -132,7 +132,15 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     });
 
     it('validates the number of labels is the number of owners', async () => {
-      await expectError(() => contract.register([], [account0], {from: claimant0}), 'must pass the same number of labels and owners');
+      await expectError(
+        () => contract.register([], [account0], {from: claimant0}),
+        'must pass the same number of labels and owners'
+      );
+
+      await expectError(
+        () => contract.register([MOODY_LABEL], [], {from: claimant0}),
+        'must pass the same number of labels and owners'
+      );
     });
 
     it('zero addresses is no op', async () => {
@@ -153,6 +161,11 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
   describe('release', () => {
     const CURRENT_TIME = 100;
 
+    const sign = async (label, timestamp, from) => web3.eth.sign(
+      await contract.getReleaseSignData(label, timestamp),
+      from
+    );
+
     beforeEach('add claimants', async () => {
       await contract.addClaimants([claimant0, claimant1]);
     });
@@ -165,13 +178,37 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
       await contract.setTime(CURRENT_TIME);
     });
 
-    it('sets the subnode owner to address 0');
-    it('can be called by anyone');
+    it('sets the subnode owner to address 0', async () => {
+      const validSignature = await sign(MOODY_LABEL, 120, account0);
 
-    // "the signature has expired"
-    it('cannot be called if the timestamp expires');
-    // "signature is not from current owner"
-    it('cannot be called if the signature is invalid');
+      await contract.release(MOODY_LABEL, 120, validSignature, {from: account0});
+
+      assert.equal(/^0x0{40}$/.test(await ens.owner(MOODY_ETHVAULT_NODE)), true);
+    });
+
+    it('can be called by anyone', async () => {
+      const validSignature = await sign(MOODY_LABEL, 120, account0);
+
+      await contract.release(MOODY_LABEL, 120, validSignature, {from: account1});
+    });
+
+    it('cannot be called if the timestamp is before now', async () => {
+      const validSignature = await sign(MOODY_LABEL, 99, account0);
+
+      await expectError(
+        () => contract.release(MOODY_LABEL, 99, validSignature),
+        'the signature has expired'
+      );
+    });
+
+    it('cannot be called if the signature is invalid', async () => {
+      const validSignatureWrongSigner = await sign(MOODY_LABEL, 120, account1);
+
+      await expectError(
+        () => contract.release(MOODY_LABEL, 120, validSignatureWrongSigner),
+        'signature is not from current owner'
+      );
+    });
 
     it('is no op if already released', async () => {
       const fakeSignature = utils.sha3('fake');

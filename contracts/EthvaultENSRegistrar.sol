@@ -50,6 +50,11 @@ contract EthvaultENSRegistrar is Clock {
     }
   }
 
+  // Get the data that the user should sign to release a name.
+  function getReleaseSignData(bytes32 label, uint256 expirationTimestamp) pure public returns (bytes32) {
+    return keccak256(abi.encodePacked(label, expirationTimestamp));
+  }
+
   // Allow a subnode to be released given the user's signature. Anyone can perform this operation as long as the
   // signature has not expired.
   function release(bytes32 label, uint256 expirationTimestamp, bytes calldata signature) external {
@@ -62,7 +67,7 @@ contract EthvaultENSRegistrar is Clock {
       return;
     }
 
-    address signer = ECDSA.recover(keccak256(abi.encodePacked(label, expirationTimestamp)), signature);
+    address signer = ECDSA.recover(getReleaseSignData(label, expirationTimestamp), signature);
 
     if (signer != currentOwner) {
       revert("signature is not from current owner");
