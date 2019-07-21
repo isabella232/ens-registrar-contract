@@ -5,6 +5,9 @@ import "@ensdomains/resolver/contracts/Resolver.sol";
 
 // This registrar allows a set of claimant addresses to alias any subnode to an address.
 contract EthvaultENSRegistrar {
+  // Emitted when a user is registered
+  event Registration(address claimant, bytes32 label, address owner);
+
   ENS public ens;
   Resolver public publicResolver;
 
@@ -29,12 +32,6 @@ contract EthvaultENSRegistrar {
     }
 
     _;
-  }
-
-  // Set the resolver in ENS to the public resolver contract. Used when the ENS root node owner is set to this registrar
-  // but the public resolver is not set as the resolver.
-  function setResolver() external claimantOnly {
-    ens.setResolver(rootNode, address(publicResolver));
   }
 
   // Add claimants to the set.
@@ -80,6 +77,8 @@ contract EthvaultENSRegistrar {
 
       // Finally pass ownership to the new owner.
       ens.setSubnodeOwner(rootNode, label, owner);
+
+      emit Registration(msg.sender, label, owner);
     }
   }
 

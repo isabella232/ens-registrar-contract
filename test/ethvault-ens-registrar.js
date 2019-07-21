@@ -34,20 +34,99 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     contract = await EthvaultENSRegistrar.new(ens.address, publicResolver.address, ETHVAULT_NAME_HASH, {from: deployer});
 
     // Set the owner of the ethvault label to the contract
-    await fifsRegistrar.register(utils.sha3('ethvault'), contract.address);
+    await fifsRegistrar.register(utils.sha3('ethvault'), contract.address, {from: deployer});
   });
 
   it('is deployed', async () => {
     assert.equal(typeof contract.address, 'string');
   });
 
-  it('sender is claimant', async () => {
-    assert.equal(await contract.isClaimant(deployer), true);
+  it('is the owner of the ethvault node', async () => {
+    assert.equal(await ens.owner(ETHVAULT_NAME_HASH), contract.address);
   });
 
-  describe('#setResolver', () => {
-    it('sets the resolver in ens to the public resolver', async () => {
-      await contract.setResolver({from: deployer});
+
+  describe('claimants', async () => {
+    it('sender is claimant', async () => {
+      assert.equal(await contract.isClaimant(deployer), true);
+    });
+
+    it('sender can add claimant', async () => {
+      await contract.addClaimants([claimant0, claimant1]);
+      assert.equal(await contract.isClaimant(claimant0), true);
+      assert.equal(await contract.isClaimant(claimant1), true);
+      assert.equal(await contract.isClaimant(account0), false);
+    });
+
+    it('sender can remove claimant', async () => {
+      await contract.addClaimants([claimant0, claimant1]);
+      assert.equal(await contract.isClaimant(claimant0), true);
+      await contract.removeClaimants([claimant0]);
+      assert.equal(await contract.isClaimant(claimant0), false);
+    });
+
+    describe('authorization', async () => {
+      beforeEach(async () => {
+        await contract.addClaimants([claimant0, claimant1]);
+      });
+
+      async function expectAuthError(func) {
+        let failed = false;
+        try {
+          await func();
+        } catch (error) {
+          assert.equal(error.message.indexOf('must be from claimant') !== -1, true);
+          failed = true;
+        }
+
+        assert.equal(failed, true);
+      }
+
+      it('non-claimants cannot call addClaimants', async () => {
+        await expectAuthError(() => contract.addClaimants([account0], {from: account0}));
+      });
+
+      it('claimants can call addClaimants', async () => {
+        await contract.addClaimants([account0], {from: claimant1});
+      });
+
+      it('claimants can call removeClaimants', async () => {
+        await contract.removeClaimants([claimant0], {from: claimant1});
+      });
+
+      it('non-claimants cannot can call removeClaimants', async () => {
+        await expectAuthError(() => contract.removeClaimants([claimant0], {from: account0}));
+      });
+
+      it('claimants can call register', async () => {
+        await contract.register([MOODY_LABEL], [account0], {from: claimant0});
+      });
+
+      it('non-claimants cannot call register', async () => {
+        await expectAuthError(() => contract.register([MOODY_LABEL], [account0], {from: account0}));
+      });
     });
   });
+
+  describe('register', () => {
+    beforeEach(async () => {
+      await contract.addClaimants([claimant0, claimant1]);
+    });
+
+    it('sets the owner', async () => {
+      await contract.register([MOODY_LABEL], [account0], {from: claimant0});
+      assert.equal(await ens.owner(MOODY_ETHVAULT_NODE), account0);
+    });
+
+    it('sets the resolver to the public resolver', async () => {
+      await contract.register([MOODY_LABEL], [account0], {from: claimant0});
+      assert.equal(await ens.resolver(MOODY_ETHVAULT_NODE), publicResolver.address);
+    });
+
+    it('sets the resolution in the public resolver', async () => {
+      await contract.register([MOODY_LABEL], [account0], {from: claimant0});
+      assert.equal(await publicResolver.addr(MOODY_ETHVAULT_NODE), account0);
+    });
+  });
+
 });
