@@ -31,6 +31,7 @@
     "@ensdomains/ens": "^0.3.11",
     "@ensdomains/resolver": "^0.1.9",
     "eth-ens-namehash": "^2.0.8",
+    "openzeppelin-solidity": "^2.3.0",
     "truffle": "^5.0.28",
     "web3-utils": "^1.0.0"
   }

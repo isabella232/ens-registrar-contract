@@ -1,4 +1,4 @@
-const EthvaultENSRegistrar = artifacts.require('EthvaultENSRegistrar');
+const EthvaultENSRegistrar = artifacts.require('TestEthvaultENSRegistrar');
 const ENSRegistry = artifacts.require('@ensdomains/ens/contracts/ENSRegistry');
 const FIFSRegistrar = artifacts.require('@ensdomains/ens/contracts/FIFSRegistrar');
 const ReverseRegistrar = artifacts.require('@ensdomains/ens/contracts/ReverseRegistrar');
@@ -99,11 +99,11 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
       });
 
       it('claimants can call register', async () => {
-        await contract.register([MOODY_LABEL], [account0], {from: claimant0});
+        await contract.claim([MOODY_LABEL], [account0], {from: claimant0});
       });
 
       it('non-claimants cannot call register', async () => {
-        await expectAuthError(() => contract.register([MOODY_LABEL], [account0], {from: account0}));
+        await expectAuthError(() => contract.claim([MOODY_LABEL], [account0], {from: account0}));
       });
     });
   });
@@ -114,17 +114,17 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     });
 
     it('sets the owner', async () => {
-      await contract.register([MOODY_LABEL], [account0], {from: claimant0});
+      await contract.claim([MOODY_LABEL], [account0], {from: claimant0});
       assert.equal(await ens.owner(MOODY_ETHVAULT_NODE), account0);
     });
 
     it('sets the resolver to the public resolver', async () => {
-      await contract.register([MOODY_LABEL], [account0], {from: claimant0});
+      await contract.claim([MOODY_LABEL], [account0], {from: claimant0});
       assert.equal(await ens.resolver(MOODY_ETHVAULT_NODE), publicResolver.address);
     });
 
     it('sets the resolution in the public resolver', async () => {
-      await contract.register([MOODY_LABEL], [account0], {from: claimant0});
+      await contract.claim([MOODY_LABEL], [account0], {from: claimant0});
       assert.equal(await publicResolver.addr(MOODY_ETHVAULT_NODE), account0);
     });
   });

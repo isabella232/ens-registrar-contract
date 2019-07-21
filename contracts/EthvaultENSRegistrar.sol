@@ -2,9 +2,11 @@ pragma solidity 0.5.8;
 
 import "@ensdomains/ens/contracts/ENS.sol";
 import "@ensdomains/resolver/contracts/Resolver.sol";
+import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
+import "./Clock.sol";
 
 // This registrar allows a set of claimant addresses to alias any subnode to an address.
-contract EthvaultENSRegistrar {
+contract EthvaultENSRegistrar is Clock {
   // Emitted when a user is registered
   event Registration(address claimant, bytes32 label, address owner);
 
@@ -48,13 +50,38 @@ contract EthvaultENSRegistrar {
     }
   }
 
+  // Allow a subnode to be released given the user's signature. Anyone can perform this operation as long as the
+  // signature has not expired.
+  function release(bytes32 label, uint256 expirationTimestamp, bytes calldata signature) external {
+    bytes32 subnode = keccak256(abi.encodePacked(rootNode, label));
+
+    address currentOwner = ens.owner(subnode);
+
+    if (currentOwner == address(0)) {
+      // No-op, just return.
+      return;
+    }
+
+    address signer = ECDSA.recover(keccak256(abi.encodePacked(label, expirationTimestamp)), signature);
+
+    if (signer != currentOwner) {
+      revert("signature is not from current owner");
+    }
+
+    if (expirationTimestamp < getTime()) {
+      revert("the signature has expired");
+    }
+
+    ens.setSubnodeOwner(rootNode, label, address(0));
+  }
+
   /**
    * Register a subdomain name, sets the resolver, updates the resolver, and sets the address of the resolver to the
    * new owner.
    * @param labels The hashes of the label to register
    * @param owners The addresses of the new owners
    */
-  function register(bytes32[] calldata labels, address[] calldata owners) external claimantOnly {
+  function claim(bytes32[] calldata labels, address[] calldata owners) external claimantOnly {
     if (labels.length != owners.length) {
       revert("must pass the same number of labels and owners");
     }
@@ -63,11 +90,16 @@ contract EthvaultENSRegistrar {
       bytes32 label = labels[i];
       address owner = owners[i];
 
-      // First set it to this, so we can update it.
-      ens.setSubnodeOwner(rootNode, label, address(this));
-
       // Compute the subnode hash
       bytes32 subnode = keccak256(abi.encodePacked(rootNode, label));
+
+      // Prevent overwriting ownership for the user's benefit.
+      if (ens.owner(subnode) != address(0)) {
+        revert("a label is already owned");
+      }
+
+      // First set it to this, so we can update it.
+      ens.setSubnodeOwner(rootNode, label, address(this));
 
       // Set the resolver for the subnode to the public resolver
       ens.setResolver(subnode, address(publicResolver));
