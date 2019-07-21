@@ -98,17 +98,17 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
         await expectAuthError(() => contract.removeClaimants([claimant0], {from: account0}));
       });
 
-      it('claimants can call register', async () => {
+      it('claimants can call claim', async () => {
         await contract.claim([MOODY_LABEL], [account0], {from: claimant0});
       });
 
-      it('non-claimants cannot call register', async () => {
+      it('non-claimants cannot call claim', async () => {
         await expectAuthError(() => contract.claim([MOODY_LABEL], [account0], {from: account0}));
       });
     });
   });
 
-  describe('register', () => {
+  describe('claim', () => {
     beforeEach(async () => {
       await contract.addClaimants([claimant0, claimant1]);
     });
