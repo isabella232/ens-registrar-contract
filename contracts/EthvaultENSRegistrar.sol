@@ -81,7 +81,7 @@ contract EthvaultENSRegistrar is Clock {
    * @param labels The hashes of the label to register
    * @param owners The addresses of the new owners
    */
-  function claim(bytes32[] calldata labels, address[] calldata owners) external claimantOnly {
+  function register(bytes32[] calldata labels, address[] calldata owners) external claimantOnly {
     if (labels.length != owners.length) {
       revert("must pass the same number of labels and owners");
     }
@@ -93,9 +93,17 @@ contract EthvaultENSRegistrar is Clock {
       // Compute the subnode hash
       bytes32 subnode = keccak256(abi.encodePacked(rootNode, label));
 
-      // Prevent overwriting ownership for the user's benefit.
-      if (ens.owner(subnode) != address(0)) {
-        revert("a label is already owned");
+      // Get the current owner of this subnode
+      address currentOwner = ens.owner(subnode);
+
+      // Prevent overwriting ownership with a different address
+      if (currentOwner != address(0) && currentOwner != owner) {
+        revert("the label owner may not be changed");
+      }
+
+      // Skip if the current owner is already the owner
+      if (currentOwner == owner) {
+        continue;
       }
 
       // First set it to this, so we can update it.

@@ -13,6 +13,19 @@ const ETHVAULT_NAME_HASH = namehash.hash('ethvault.xyz');
 
 const MOODY_ETHVAULT_NODE = namehash.hash('moody.ethvault.xyz');
 const MOODY_LABEL = utils.sha3('moody');
+const BOB_LABEL = utils.sha3('bob');
+
+async function expectError(func, expectedMessage) {
+  let failed = false;
+  try {
+    await func();
+  } catch (error) {
+    assert.equal(error.message.indexOf(expectedMessage) !== -1, true);
+    failed = true;
+  }
+
+  assert.equal(failed, true);
+}
 
 contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, account0, account1, account2]) {
   let contract;
@@ -70,17 +83,7 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
         await contract.addClaimants([claimant0, claimant1]);
       });
 
-      async function expectAuthError(func) {
-        let failed = false;
-        try {
-          await func();
-        } catch (error) {
-          assert.equal(error.message.indexOf('must be from claimant') !== -1, true);
-          failed = true;
-        }
-
-        assert.equal(failed, true);
-      }
+      const expectAuthError = func => expectError(func, 'must be from claimant');
 
       it('non-claimants cannot call addClaimants', async () => {
         await expectAuthError(() => contract.addClaimants([account0], {from: account0}));
@@ -98,34 +101,79 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
         await expectAuthError(() => contract.removeClaimants([claimant0], {from: account0}));
       });
 
-      it('claimants can call claim', async () => {
-        await contract.claim([MOODY_LABEL], [account0], {from: claimant0});
+      it('claimants can call register', async () => {
+        await contract.register([MOODY_LABEL], [account0], {from: claimant0});
       });
 
-      it('non-claimants cannot call claim', async () => {
-        await expectAuthError(() => contract.claim([MOODY_LABEL], [account0], {from: account0}));
+      it('non-claimants cannot call register', async () => {
+        await expectAuthError(() => contract.register([MOODY_LABEL], [account0], {from: account0}));
       });
     });
   });
 
-  describe('claim', () => {
-    beforeEach(async () => {
+  describe('register', () => {
+    beforeEach('add claimants', async () => {
       await contract.addClaimants([claimant0, claimant1]);
     });
 
     it('sets the owner', async () => {
-      await contract.claim([MOODY_LABEL], [account0], {from: claimant0});
+      await contract.register([MOODY_LABEL], [account0], {from: claimant0});
       assert.equal(await ens.owner(MOODY_ETHVAULT_NODE), account0);
     });
 
     it('sets the resolver to the public resolver', async () => {
-      await contract.claim([MOODY_LABEL], [account0], {from: claimant0});
+      await contract.register([MOODY_LABEL], [account0], {from: claimant0});
       assert.equal(await ens.resolver(MOODY_ETHVAULT_NODE), publicResolver.address);
     });
 
     it('sets the resolution in the public resolver', async () => {
-      await contract.claim([MOODY_LABEL], [account0], {from: claimant0});
+      await contract.register([MOODY_LABEL], [account0], {from: claimant0});
       assert.equal(await publicResolver.addr(MOODY_ETHVAULT_NODE), account0);
+    });
+
+    it('validates the number of labels is the number of owners', async () => {
+      await expectError(() => contract.register([], [account0], {from: claimant0}), 'must pass the same number of labels and owners');
+    });
+
+    it('zero addresses is no op', async () => {
+      await contract.register([], [], {from: claimant0});
+    });
+
+    it('does not throw on overwrite with same address', async () => {
+      await contract.register([MOODY_LABEL], [account0], {from: claimant0});
+      await contract.register([MOODY_LABEL], [account0], {from: claimant1});
+    });
+
+    it('cannot overwrite existing labels with different addresses', async () => {
+      await contract.register([MOODY_LABEL], [account0], {from: claimant0});
+      await expectError(() => contract.register([MOODY_LABEL], [account1], {from: claimant0}), 'the label owner may not be changed');
+    });
+  });
+
+  describe('release', () => {
+    const CURRENT_TIME = 100;
+
+    beforeEach('add claimants', async () => {
+      await contract.addClaimants([claimant0, claimant1]);
+    });
+
+    beforeEach('register the moody label', async () => {
+      await contract.register([MOODY_LABEL], [account0], {from: claimant0});
+    });
+
+    beforeEach('set current time', async () => {
+      await contract.setTime(CURRENT_TIME);
+    });
+
+    it('sets the subnode owner to address 0');
+    it('can be called by anyone');
+
+    it('cannot be called if the timestamp expires');
+    it('cannot be called if the signature is invalid');
+
+    it('is no op if already released', async () => {
+      const fakeSignature = utils.sha3('fake');
+      await contract.release(BOB_LABEL, 0, fakeSignature, {from: account0});
     });
   });
 
