@@ -1,5 +1,9 @@
 module.exports = {
-  networks: {},
+  networks: {
+    mainnet: {
+
+    }
+  },
   compilers: {
     solc: {
       settings: {

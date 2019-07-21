@@ -1,8 +1,9 @@
-pragma solidity >=0.4.22 <0.6.0;
+pragma solidity 0.5.8;
 
 import "@ensdomains/ens/contracts/ENS.sol";
 import "@ensdomains/resolver/contracts/Resolver.sol";
 
+// This registrar allows a set of claimant addresses to alias any subnode to an address.
 contract EthvaultENSRegistrar {
   ENS public ens;
   Resolver public publicResolver;
@@ -11,36 +12,42 @@ contract EthvaultENSRegistrar {
   bytes32 public rootNode;
 
   // The addresses that may claim ENS subdomains for the given node
-  mapping(address => bool) public allowedClaimants;
+  mapping(address => bool) public isClaimant;
 
-  constructor(address _ens, Resolver _publicResolver, bytes32 _rootNode) public {
-    ens = ENS(_ens);
-    publicResolver = Resolver(_publicResolver);
+  constructor(ENS _ens, Resolver _publicResolver, bytes32 _rootNode) public {
+    ens = _ens;
+    publicResolver = _publicResolver;
     rootNode = _rootNode;
 
-    allowedClaimants[msg.sender] = true;
+    isClaimant[msg.sender] = true;
   }
 
   // Only one of the claimants may call a function.
   modifier claimantOnly() {
-    if (!allowedClaimants[msg.sender]) {
+    if (!isClaimant[msg.sender]) {
       revert("unauthorized - must be from claimant");
     }
 
     _;
   }
 
+  // Set the resolver in ENS to the public resolver contract. Used when the ENS root node owner is set to this registrar
+  // but the public resolver is not set as the resolver.
+  function setResolver() external claimantOnly {
+    ens.setResolver(rootNode, address(publicResolver));
+  }
+
   // Add claimants to the set.
   function addClaimants(address[] calldata claimants) external claimantOnly {
     for (uint i = 0; i < claimants.length; i++) {
-      allowedClaimants[claimants[i]] = true;
+      isClaimant[claimants[i]] = true;
     }
   }
 
   // Remove claimants from the set.
   function removeClaimants(address[] calldata claimants) external claimantOnly {
     for (uint i = 0; i < claimants.length; i++) {
-      allowedClaimants[claimants[i]] = false;
+      isClaimant[claimants[i]] = false;
     }
   }
 
