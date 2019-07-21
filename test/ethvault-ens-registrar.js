@@ -168,7 +168,9 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     it('sets the subnode owner to address 0');
     it('can be called by anyone');
 
+    // "the signature has expired"
     it('cannot be called if the timestamp expires');
+    // "signature is not from current owner"
     it('cannot be called if the signature is invalid');
 
     it('is no op if already released', async () => {
