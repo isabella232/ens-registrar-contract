@@ -10,20 +10,3 @@ install: npm install
 
 script:
   - npm test
-
-deploy:
-  - provider: script
-    skip_cleanup: true
-    script: npm run migrate:ropsten
-
-  - provider: script
-    skip_cleanup: true
-    script: npm run migrate:rinkeby
-
-  - provider: script
-    skip_cleanup: true
-    script: npm run migrate:goerli
-
-  - provider: script
-    skip_cleanup: true
-    script: npm run migrate:mainnet

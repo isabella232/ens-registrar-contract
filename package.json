@@ -2,7 +2,6 @@
   "name": "@ethvault/ens-registrar-contract",
   "version": "1.0.0",
   "description": "Ethereum smart contract that manages the ethvault.xyz ENS domain",
-  "main": "truffle-config.js",
   "directories": {
     "test": "test"
   },
@@ -23,6 +22,9 @@
     "smart",
     "contract",
     "manager"
+  ],
+  "files": [
+    "build"
   ],
   "author": "Moody Salem <moody.salem@gmail.com>",
   "license": "MIT",
