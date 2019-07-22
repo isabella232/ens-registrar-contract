@@ -1,4 +1,4 @@
-const ECDSA = artifacts.require('openzeppelin-solidity/contracts/cryptography/ECDSA');
+const ECRecovery = artifacts.require('ECRecovery');
 const EthvaultENSRegistrar = artifacts.require('EthvaultENSRegistrar');
 
 const ENS_ADDRESSES = {
@@ -20,8 +20,8 @@ module.exports = function (deployer, network, accounts) {
   if (network in ENS_ADDRESSES) {
     const {ens, publicResolver} = ENS_ADDRESSES[network];
 
-    deployer.deploy(ECDSA);
-    deployer.link(ECDSA, EthvaultENSRegistrar);
+    deployer.deploy(ECRecovery);
+    deployer.link(ECRecovery, EthvaultENSRegistrar);
     deployer.deploy(
       EthvaultENSRegistrar,
       ens,

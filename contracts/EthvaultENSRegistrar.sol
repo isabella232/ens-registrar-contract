@@ -2,7 +2,7 @@ pragma solidity 0.5.8;
 
 import "@ensdomains/ens/contracts/ENS.sol";
 import "@ensdomains/resolver/contracts/Resolver.sol";
-import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
+import "./ECRecovery.sol";
 import "./Clock.sol";
 
 // This registrar allows a set of claimant addresses to alias any subnode to an address.
@@ -71,8 +71,8 @@ contract EthvaultENSRegistrar is Clock {
       return;
     }
 
-    address signer = ECDSA.recover(
-      ECDSA.toEthSignedMessageHash(getReleaseSignData(label, expirationTimestamp)),
+    address signer = ECRecovery.recover(
+      ECRecovery.toEthSignedMessageHash(getReleaseSignData(label, expirationTimestamp)),
       signature
     );
 
