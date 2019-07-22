@@ -28,7 +28,7 @@ async function expectError(func, expectedMessage) {
   assert.equal(failed, true, `expected to throw but did not throw`);
 }
 
-contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, account0, account1, account2]) {
+contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, account0, account1]) {
   let contract;
   let testDependencies;
   let ens;
@@ -243,7 +243,7 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     async function sign(label, timestamp, from) {
       const signableData = await contract.getReleaseSignData(label, timestamp);
 
-      return await web3.eth.sign(signableData, from);
+      return await web3.eth.accounts.sign(signableData, from).signature;
     }
 
     beforeEach('add claimants', async () => {
