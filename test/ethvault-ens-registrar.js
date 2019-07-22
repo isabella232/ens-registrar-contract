@@ -9,9 +9,6 @@ const BigNumber = require('bignumber.js');
 const utils = require('web3-utils');
 const namehash = require('eth-ens-namehash');
 
-const ethers = require('ethers');
-const provider = new ethers.providers.JsonRpcProvider('http://localhost:7545');
-
 const ETHVAULT_NAME_HASH = namehash.hash('ethvault.xyz');
 
 const MOODY_ETHVAULT_NODE = namehash.hash('moody.ethvault.xyz');
