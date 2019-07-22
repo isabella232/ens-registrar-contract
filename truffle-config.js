@@ -2,6 +2,7 @@ const HDWalletProvider = require('truffle-hdwallet-provider');
 
 const INFURA_PROJECT_ID = process.env.INFURA_PROJECT_ID;
 const SIGNING_PRIVATE_KEY = process.env.SIGNING_PRIVATE_KEY;
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 
 module.exports = {
   networks: {
@@ -45,6 +46,15 @@ module.exports = {
         )
     },
   },
+
+  plugins: [
+    'truffle-plugin-verify'
+  ],
+
+  api_keys: {
+    etherscan: ETHERSCAN_API_KEY
+  },
+
   compilers: {
     solc: {
       settings: {

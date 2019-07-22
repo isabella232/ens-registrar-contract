@@ -11,7 +11,12 @@
     "migrate:ropsten": "truffle migrate --network ropsten",
     "migrate:rinkeby": "truffle migrate --network rinkeby",
     "migrate:goerli": "truffle migrate --network goerli",
-    "migrate:mainnet": "truffle migrate --network mainnet"
+    "migrate:mainnet": "truffle migrate --network mainnet",
+    "verify": "truffle run verify EthvaultENSRegistrar",
+    "verify:mainnet": "npm run verify -- --network mainnet",
+    "verify:ropsten": "npm run verify -- --network ropsten",
+    "verify:rinkeby": "npm run verify -- --network rinkeby",
+    "verify:goerli": "npm run verify -- --network goerli"
   },
   "repository": {
     "type": "git",
