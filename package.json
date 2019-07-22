@@ -30,6 +30,7 @@
     "@ensdomains/dnssec-oracle": "^0.1.2",
     "@ensdomains/ens": "^0.3.11",
     "@ensdomains/resolver": "^0.1.9",
+    "bignumber.js": "^9.0.0",
     "eth-ens-namehash": "^2.0.8",
     "openzeppelin-solidity": "^2.3.0",
     "truffle": "^5.0.28",

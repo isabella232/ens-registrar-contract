@@ -8,7 +8,7 @@ import "./Clock.sol";
 // This registrar allows a set of claimant addresses to alias any subnode to an address.
 contract EthvaultENSRegistrar is Clock {
   // Emitted when a user is registered
-  event Registration(address claimant, bytes32 label, address owner);
+  event Registration(address claimant, bytes32 label, address owner, uint256 value);
 
   ENS public ens;
   Resolver public publicResolver;
@@ -50,6 +50,10 @@ contract EthvaultENSRegistrar is Clock {
     }
   }
 
+  function namehash(bytes32 label) view public returns (bytes32) {
+    return keccak256(abi.encodePacked(rootNode, label));
+  }
+
   // Get the data that the user should sign to release a name.
   function getReleaseSignData(bytes32 label, uint256 expirationTimestamp) pure public returns (bytes32) {
     return keccak256(abi.encodePacked(label, expirationTimestamp));
@@ -58,7 +62,7 @@ contract EthvaultENSRegistrar is Clock {
   // Allow a subnode to be released given the user's signature. Anyone can perform this operation as long as the
   // signature has not expired.
   function release(bytes32 label, uint256 expirationTimestamp, bytes calldata signature) external {
-    bytes32 subnode = keccak256(abi.encodePacked(rootNode, label));
+    bytes32 subnode = namehash(label);
 
     address currentOwner = ens.owner(subnode);
 
@@ -67,7 +71,14 @@ contract EthvaultENSRegistrar is Clock {
       return;
     }
 
-    address signer = ECDSA.recover(getReleaseSignData(label, expirationTimestamp), signature);
+    address signer = ECDSA.recover(
+      ECDSA.toEthSignedMessageHash(getReleaseSignData(label, expirationTimestamp)),
+      signature
+    );
+
+    if (signer == address(0)) {
+      revert("invalid signature");
+    }
 
     if (signer != currentOwner) {
       revert("signature is not from current owner");
@@ -82,21 +93,25 @@ contract EthvaultENSRegistrar is Clock {
 
   /**
    * Register a subdomain name, sets the resolver, updates the resolver, and sets the address of the resolver to the
-   * new owner.
+   * new owner. Also transfers any additional value to each address.
    * @param labels The hashes of the label to register
    * @param owners The addresses of the new owners
+   * @param values The WEI values to send to each address
    */
-  function register(bytes32[] calldata labels, address[] calldata owners) external claimantOnly {
-    if (labels.length != owners.length) {
+  function register(bytes32[] calldata labels, address payable[] calldata owners, uint256[] calldata values) external payable claimantOnly {
+    if (labels.length != owners.length || owners.length != values.length) {
       revert("must pass the same number of labels and owners");
     }
 
+    uint256 dispersedTotal = 0;
+
     for (uint i = 0; i < owners.length; i++) {
       bytes32 label = labels[i];
-      address owner = owners[i];
+      address payable owner = owners[i];
+      uint256 value = values[i];
 
       // Compute the subnode hash
-      bytes32 subnode = keccak256(abi.encodePacked(rootNode, label));
+      bytes32 subnode = namehash(label);
 
       // Get the current owner of this subnode
       address currentOwner = ens.owner(subnode);
@@ -123,7 +138,16 @@ contract EthvaultENSRegistrar is Clock {
       // Finally pass ownership to the new owner.
       ens.setSubnodeOwner(rootNode, label, owner);
 
-      emit Registration(msg.sender, label, owner);
+      if (value > 0) {
+        dispersedTotal = dispersedTotal + value;
+        owner.transfer(value);
+      }
+
+      emit Registration(msg.sender, label, owner, value);
+    }
+
+    if (dispersedTotal < msg.value) {
+      msg.sender.transfer(msg.value - dispersedTotal);
     }
   }
 
