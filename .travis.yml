@@ -10,3 +10,7 @@ install: npm install
 
 script:
   - npm test
+
+deploy:
+  provider: script
+  script: npm run migrate:ropsten

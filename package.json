@@ -8,7 +8,11 @@
   },
   "scripts": {
     "test": "truffle test",
-    "build": "truffle compile"
+    "build": "truffle compile",
+    "migrate:ropsten": "truffle migrate --network ropsten",
+    "migrate:rinkeby": "truffle migrate --network rinkeby",
+    "migrate:goerli": "truffle migrate --network goerli",
+    "migrate:mainnet": "truffle migrate --network mainnet"
   },
   "repository": {
     "type": "git",
@@ -34,6 +38,7 @@
     "bignumber.js": "^9.0.0",
     "eth-ens-namehash": "^2.0.8",
     "truffle": "^5.0.28",
+    "truffle-hdwallet-provider": "^1.0.14",
     "web3-utils": "^1.0.0"
   }
 }
