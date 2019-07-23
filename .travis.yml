@@ -14,13 +14,10 @@ script:
 deploy:
   - provider: script
     skip_cleanup: true
-    script: npm run migrate:ropsten
+    script: npm run deploy:ropsten
 
   - provider: script
     skip_cleanup: true
-    script: npm run migrate:mainnet
+    script: npm run deploy:mainnet
     on:
       tags: true
-
-after_deploy:
-  - "npm run verify"
