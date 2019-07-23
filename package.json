@@ -12,11 +12,7 @@
     "migrate:rinkeby": "truffle migrate --network rinkeby",
     "migrate:goerli": "truffle migrate --network goerli",
     "migrate:mainnet": "truffle migrate --network mainnet",
-    "verify": "truffle run verify EthvaultENSRegistrar",
-    "verify:mainnet": "npm run verify -- --network mainnet",
-    "verify:ropsten": "npm run verify -- --network ropsten",
-    "verify:rinkeby": "npm run verify -- --network rinkeby",
-    "verify:goerli": "npm run verify -- --network goerli"
+    "verify": "truffle run verify EthvaultENSRegistrar"
   },
   "repository": {
     "type": "git",
@@ -46,6 +42,7 @@
     "eth-ens-namehash": "^2.0.8",
     "truffle": "^5.0.28",
     "truffle-hdwallet-provider": "^1.0.14",
+    "truffle-plugin-verify": "^0.3.1",
     "web3-utils": "^1.0.0"
   }
 }

@@ -20,8 +20,12 @@ const namehash = require('eth-ens-namehash');
 const ETHVAULT_XYZ_NODE = namehash.hash('ethvault.xyz');
 
 module.exports = function (deployer, network, accounts) {
+  if (network.endsWith('-fork')) {
+    network = network.substring(0, network.lastIndexOf('-fork'));
+  }
+
   if (network in ENS_ADDRESSES) {
-    const {ens} = ENS_ADDRESSES[network];
+    const { ens } = ENS_ADDRESSES[network];
 
     deployer.deploy(
       EthvaultENSRegistrar,
