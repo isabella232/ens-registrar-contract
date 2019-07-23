@@ -30,7 +30,7 @@ module.exports = function (deployer, network, accounts) {
         const registrar = await EthvaultENSRegistrar.deployed();
 
         await registrar.addClaimants(CLAIMANTS_BY_NETWORK[network].claimants);
-        await registrar.removeClaimants(accounts[0]);
+        await registrar.removeClaimants([accounts[0]]);
       }
     );
   }
