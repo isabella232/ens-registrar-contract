@@ -1,4 +1,4 @@
-# @ethvault/ens-registry-contract
+# @ethvault/ens-registrar-contract
 
 [![Build Status](https://travis-ci.org/ethvault/ens-registrar-contract.svg?branch=master)](https://travis-ci.org/ethvault/ens-registrar-contract)
 
@@ -9,5 +9,6 @@ simplify the process of claiming an ENS subdomain for `ethvault.xyz`.
 
 - Prevent an attacker from changing the address associated with a user domain
 - Register subdomains *.ethvault.xyz and set the resolver to the address in a single transaction
+- Support sending some value to each address upon registration
 
 We cannot set the reverse record for the user because that would involve signing a transaction with their private keys.

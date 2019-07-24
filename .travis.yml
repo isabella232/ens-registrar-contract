@@ -18,11 +18,11 @@ deploy:
     on:
       tags: true
 
-#  - provider: script
-#    skip_cleanup: true
-#    script: npm run deploy:mainnet
-#    on:
-#      tags: true
+  - provider: script
+    skip_cleanup: true
+    script: npm run deploy:mainnet
+    on:
+      tags: true
 
   - provider: npm
     skip_cleanup: true

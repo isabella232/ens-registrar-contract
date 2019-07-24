@@ -242,9 +242,7 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     async function sign(label, timestamp, from) {
       const signableData = await contract.getReleaseSignData(label, timestamp);
 
-      const signature = await web3.eth.sign(signableData, from);
-
-      return signature;
+      return web3.eth.sign(signableData, from);
     }
 
     beforeEach('add claimants', async () => {

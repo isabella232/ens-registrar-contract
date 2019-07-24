@@ -8,8 +8,9 @@ module.exports = {
   networks: {
     mainnet: {
       network_id: '1',
-      gas: 5000000,
-      provider: () => 
+      gas: 2000000,
+      gasPrice: 3 * Math.pow(10, 9),
+      provider: () =>
         new HDWalletProvider(
           SIGNING_PRIVATE_KEY,
           `https://mainnet.infura.io/v3/${INFURA_PROJECT_ID}`
@@ -19,7 +20,7 @@ module.exports = {
     ropsten: {
       network_id: '3',
       gas: 5000000,
-      provider: () => 
+      provider: () =>
         new HDWalletProvider(
           SIGNING_PRIVATE_KEY,
           `https://ropsten.infura.io/v3/${INFURA_PROJECT_ID}`
@@ -29,7 +30,7 @@ module.exports = {
     rinkeby: {
       network_id: '4',
       gas: 5000000,
-      provider: () => 
+      provider: () =>
         new HDWalletProvider(
           SIGNING_PRIVATE_KEY,
           `https://rinkeby.infura.io/v3/${INFURA_PROJECT_ID}`
@@ -39,12 +40,12 @@ module.exports = {
     goerli: {
       network_id: '5',
       gas: 5000000,
-      provider: () => 
+      provider: () =>
         new HDWalletProvider(
           SIGNING_PRIVATE_KEY,
           `https://goerli.infura.io/v3/${INFURA_PROJECT_ID}`
         )
-    },
+    }
   },
 
   plugins: [
