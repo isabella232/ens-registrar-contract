@@ -18,9 +18,9 @@
     "verify:rinkeby": "npm run verify -- --network rinkeby",
     "verify:goerli": "npm run verify -- --network goerli",
     "deploy:ropsten": "npm run migrate:ropsten && npm run verify:ropsten",
-    "deploy:rinkeby": "npm run migrate:ropsten && npm run verify:rinkeby",
-    "deploy:goerli": "npm run migrate:ropsten && npm run verify:goerli",
-    "deploy:mainnet": "npm run migrate:ropsten && npm run verify:mainnet"
+    "deploy:rinkeby": "npm run migrate:rinkeby && npm run verify:rinkeby",
+    "deploy:goerli": "npm run migrate:goerli && npm run verify:goerli",
+    "deploy:mainnet": "npm run migrate:mainnet && npm run verify:mainnet"
   },
   "repository": {
     "type": "git",
