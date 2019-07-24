@@ -16,7 +16,7 @@ deploy:
     skip_cleanup: true
     script: npm run deploy:ropsten
     on:
-      all_branches: true
+      tags: true
 
 #  - provider: script
 #    skip_cleanup: true
