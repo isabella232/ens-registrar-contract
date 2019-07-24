@@ -16,8 +16,15 @@ deploy:
     skip_cleanup: true
     script: npm run deploy:ropsten
 
-  - provider: script
+#  - provider: script
+#    skip_cleanup: true
+#    script: npm run deploy:mainnet
+#    on:
+#      tags: true
+
+  - provider: npm
     skip_cleanup: true
-    script: npm run deploy:mainnet
+    email: "moody.salem@gmail.com"
+    api_key: $TRAVIS_NPM_API_KEY
     on:
       tags: true

@@ -1,6 +1,6 @@
 {
   "name": "@ethvault/ens-registrar-contract",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Ethereum smart contract that manages the ethvault.xyz ENS domain",
   "directories": {
     "test": "test"
@@ -41,6 +41,9 @@
     "url": "https://github.com/ethvault/ens-registrar-contract/issues"
   },
   "homepage": "https://github.com/ethvault/ens-registrar-contract#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@ensdomains/buffer": "0.0.10",
     "@ensdomains/dnssec-oracle": "^0.1.2",
