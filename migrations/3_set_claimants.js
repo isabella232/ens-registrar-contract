@@ -1,7 +1,7 @@
 const EthvaultENSRegistrar = artifacts.require('EthvaultENSRegistrar');
 
 const CLAIMANT_ADDRESSES = [
-  '0x307bfa815d421ab01e6c93cf5e4fbd88293121ec'
+  '0xa34203df6244140d93f0925c415b089ff9aef20b'
 ];
 
 const CLAIMANTS_BY_NETWORK = {
