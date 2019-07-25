@@ -8,19 +8,13 @@
   "scripts": {
     "test": "truffle test",
     "build": "truffle compile",
-    "migrate:ropsten": "truffle migrate --network ropsten",
-    "migrate:rinkeby": "truffle migrate --network rinkeby",
-    "migrate:goerli": "truffle migrate --network goerli",
     "migrate:mainnet": "truffle migrate --network mainnet",
+    "migrate:ropsten": "truffle migrate --network ropsten",
     "verify": "truffle run verify EthvaultENSRegistrar",
     "verify:mainnet": "npm run verify -- --network mainnet",
     "verify:ropsten": "npm run verify -- --network ropsten",
-    "verify:rinkeby": "npm run verify -- --network rinkeby",
-    "verify:goerli": "npm run verify -- --network goerli",
-    "deploy:ropsten": "npm run migrate:ropsten && npm run verify:ropsten",
-    "deploy:rinkeby": "npm run migrate:rinkeby && npm run verify:rinkeby",
-    "deploy:goerli": "npm run migrate:goerli && npm run verify:goerli",
-    "deploy:mainnet": "npm run migrate:mainnet && npm run verify:mainnet"
+    "deploy:mainnet": "npm run migrate:mainnet && npm run verify:mainnet",
+    "deploy:ropsten": "npm run migrate:ropsten && npm run verify:ropsten"
   },
   "repository": {
     "type": "git",

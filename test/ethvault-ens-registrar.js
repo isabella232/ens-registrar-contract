@@ -45,7 +45,12 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
   });
 
   beforeEach('deploy contract', async () => {
-    contract = await EthvaultENSRegistrar.new(ens.address, ETHVAULT_NAME_HASH, {from: deployer});
+    contract = await EthvaultENSRegistrar.new(
+      ens.address,
+      publicResolver.address,
+      ETHVAULT_NAME_HASH,
+      {from: deployer}
+    );
 
     // Set the owner of the ethvault label to the contract
     await fifsRegistrar.register(utils.sha3('ethvault'), contract.address, {from: deployer});

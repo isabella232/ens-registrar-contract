@@ -5,5 +5,6 @@ import "./FakeClock.sol";
 
 // Overrides the clock for testing.
 contract TestEthvaultENSRegistrar is EthvaultENSRegistrar, FakeClock {
-  constructor(ENS _ens, bytes32 _rootNode) EthvaultENSRegistrar(_ens, _rootNode) public {}
+  constructor(ENS _ens, Resolver _publicResolver, bytes32 _rootNode)
+    EthvaultENSRegistrar(_ens, _publicResolver, _rootNode) public {}
 }

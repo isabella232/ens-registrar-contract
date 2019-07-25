@@ -10,12 +10,6 @@ const CLAIMANTS_BY_NETWORK = {
   },
   ropsten: {
     claimants: CLAIMANT_ADDRESSES
-  },
-  rinkeby: {
-    claimants: CLAIMANT_ADDRESSES
-  },
-  goerli: {
-    claimants: CLAIMANT_ADDRESSES
   }
 };
 
