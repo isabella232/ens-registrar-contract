@@ -45,12 +45,7 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
   });
 
   beforeEach('deploy contract', async () => {
-    contract = await EthvaultENSRegistrar.new(
-      ens.address,
-      publicResolver.address,
-      ETHVAULT_NAME_HASH,
-      {from: deployer}
-    );
+    contract = await EthvaultENSRegistrar.new(ens.address, ETHVAULT_NAME_HASH, {from: deployer});
 
     // Set the owner of the ethvault label to the contract
     await fifsRegistrar.register(utils.sha3('ethvault'), contract.address, {from: deployer});
@@ -62,6 +57,13 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
 
   it('is the owner of the ethvault node', async () => {
     assert.equal(await ens.owner(ETHVAULT_NAME_HASH), contract.address);
+  });
+
+  describe('RESOLVER_NODE', () => {
+    it('is correct', async () => {
+      // This hash is checked in prod to resolve to "resolver.eth"
+      assert.equal(await contract.RESOLVER_NODE(), '0xfdd5d5de6dd63db72bbc2d487944ba13bf775b50a80805fe6fcaba9b0fba88f5');
+    });
   });
 
   describe('claimants', async () => {

@@ -6,11 +6,13 @@ import "./Clock.sol";
 
 // This registrar allows a set of claimant addresses to alias any subnode to an address.
 contract EthvaultENSRegistrar is Clock {
+  // The public resolver address can be found as the resolver of the "resolver" top level node
+  bytes32 public constant RESOLVER_NODE = keccak256(abi.encodePacked(keccak256(abi.encodePacked(bytes32(0), keccak256("eth"))), keccak256("resolver")));
+
   // Emitted when a user is registered
   event Registration(address claimant, bytes32 label, address owner, uint256 value);
 
   ENS public ens;
-  Resolver public publicResolver;
 
   // The node corresponding to ethvault.xyz
   bytes32 public rootNode;
@@ -18,9 +20,8 @@ contract EthvaultENSRegistrar is Clock {
   // The addresses that may claim ENS subdomains for the given node
   mapping(address => bool) public isClaimant;
 
-  constructor(ENS _ens, Resolver _publicResolver, bytes32 _rootNode) public {
+  constructor(ENS _ens, bytes32 _rootNode) public {
     ens = _ens;
-    publicResolver = _publicResolver;
     rootNode = _rootNode;
 
     isClaimant[msg.sender] = true;
@@ -156,6 +157,24 @@ contract EthvaultENSRegistrar is Clock {
     ens.setSubnodeOwner(rootNode, label, address(0));
   }
 
+  // Return the public resolver. This is called to get the public resolver to use during registration.
+  function getPublicResolver() view public returns (Resolver) {
+    address resolverAddr = ens.resolver(RESOLVER_NODE);
+
+    if (resolverAddr == address(0)) {
+      revert("failed to get resolver address");
+    }
+
+    Resolver resolver = Resolver(resolverAddr);
+
+    address publicResolver = resolver.addr(RESOLVER_NODE);
+    if (publicResolver == address(0)) {
+      revert("resolver had address zero for resolver node");
+    }
+
+    return Resolver(publicResolver);
+  }
+
   /**
    * Register a subdomain name, sets the resolver, updates the resolver, and sets the address of the resolver to the
    * new owner. Also transfers any additional value to each address.
@@ -190,6 +209,8 @@ contract EthvaultENSRegistrar is Clock {
       if (currentOwner == owner) {
         continue;
       }
+
+      Resolver publicResolver = getPublicResolver();
 
       // First set it to this, so we can update it.
       ens.setSubnodeOwner(rootNode, label, address(this));
