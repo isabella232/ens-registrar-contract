@@ -9,11 +9,11 @@ const BigNumber = require('bignumber.js');
 const utils = require('web3-utils');
 const namehash = require('eth-ens-namehash');
 
-const ETHVAULT_NAME_HASH = namehash.hash('ethvault.xyz');
+const ETHVAULT_NAME_HASH = namehash.hash('myethvault.com');
 
-const MOODY_ETHVAULT_NODE = namehash.hash('moody.ethvault.xyz');
+const MOODY_ETHVAULT_NODE = namehash.hash('moody.myethvault.com');
 const MOODY_LABEL = utils.sha3('moody');
-const BOB_ETHVAULT_NODE = namehash.hash('bob.ethvault.xyz');
+const BOB_ETHVAULT_NODE = namehash.hash('bob.myethvault.com');
 const BOB_LABEL = utils.sha3('bob');
 
 async function expectError(func, expectedMessage) {

@@ -1,7 +1,7 @@
 {
   "name": "@ethvault/ens-registrar-contract",
   "version": "1.0.1",
-  "description": "Ethereum smart contract that manages the ethvault.xyz ENS domain",
+  "description": "Ethereum smart contract that manages the myethvault.com ENS domain",
   "directories": {
     "test": "test"
   },

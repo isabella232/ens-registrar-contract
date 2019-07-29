@@ -14,7 +14,7 @@ contract EthvaultENSRegistrar is Clock {
 
   ENS public ens;
 
-  // The node corresponding to ethvault.xyz
+  // The node corresponding to the root ENS domain that will be registered
   bytes32 public rootNode;
 
   // The addresses that may claim ENS subdomains for the given node
