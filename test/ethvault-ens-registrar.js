@@ -48,7 +48,7 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     contract = await EthvaultENSRegistrar.new(ens.address, ETHVAULT_NAME_HASH, {from: deployer});
 
     // Set the owner of the ethvault label to the contract
-    await fifsRegistrar.register(utils.sha3('ethvault'), contract.address, {from: deployer});
+    await fifsRegistrar.register(utils.sha3('myethvault'), contract.address, {from: deployer});
   });
 
   it('is deployed', async () => {

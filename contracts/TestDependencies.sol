@@ -7,7 +7,7 @@ import "@ensdomains/resolver/contracts/PublicResolver.sol";
 
 // Construct a set of test ENS contracts for use in the EthvaultENSRegistrar unit tests.
 contract TestDependencies {
-  bytes32 constant TLD_LABEL = keccak256("xyz");
+  bytes32 constant TLD_LABEL = keccak256("com");
   bytes32 constant ETH_LABEL = keccak256("eth");
   bytes32 constant RESOLVER_LABEL = keccak256("resolver");
   bytes32 constant REVERSE_REGISTRAR_LABEL = keccak256("reverse");
