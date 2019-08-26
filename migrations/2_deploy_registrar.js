@@ -15,10 +15,6 @@ const ENS_ADDRESSES = {
   }
 };
 
-const namehash = require('eth-ens-namehash');
-
-const MYETHVAULT_COM_NODE = namehash.hash('myethvault.com');
-
 module.exports = function (deployer, network, accounts) {
   if (network.endsWith('-fork')) {
     network = network.substring(0, network.lastIndexOf('-fork'));
@@ -29,8 +25,7 @@ module.exports = function (deployer, network, accounts) {
 
     deployer.deploy(
       EthvaultENSRegistrar,
-      ens,
-      MYETHVAULT_COM_NODE
+      ens
     );
   }
 };

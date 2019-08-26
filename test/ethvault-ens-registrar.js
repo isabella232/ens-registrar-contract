@@ -9,6 +9,7 @@ const BigNumber = require('bignumber.js');
 const utils = require('web3-utils');
 const namehash = require('eth-ens-namehash');
 
+const RUSTY_SPOONS_NAMEHASH = namehash.hash('rustyspoons.com');
 const ETHVAULT_NAME_HASH = namehash.hash('myethvault.com');
 
 const MOODY_ETHVAULT_NODE = namehash.hash('moody.myethvault.com');
@@ -45,7 +46,7 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
   });
 
   beforeEach('deploy contract', async () => {
-    contract = await EthvaultENSRegistrar.new(ens.address, ETHVAULT_NAME_HASH, {from: deployer});
+    contract = await EthvaultENSRegistrar.new(ens.address, {from: deployer});
 
     // Set the owner of the ethvault label to the contract
     await fifsRegistrar.register(utils.sha3('myethvault'), contract.address, {from: deployer});
@@ -85,6 +86,14 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
       assert.equal(await contract.isClaimant(claimant0), false);
     });
 
+    it('sender cannot remove self', async () => {
+      await contract.addClaimants([claimant0, claimant1]);
+      await expectError(
+        () => contract.removeClaimants([claimant0], {from: claimant0}),
+        'cannot remove self'
+      );
+    });
+
     describe('authorization', async () => {
       beforeEach(async () => {
         await contract.addClaimants([claimant0, claimant1]);
@@ -109,11 +118,11 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
       });
 
       it('claimants can call register', async () => {
-        await contract.register([MOODY_LABEL], [account0], [0], {from: claimant0});
+        await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [account0], [0], {from: claimant0});
       });
 
       it('non-claimants cannot call register', async () => {
-        await expectAuthError(() => contract.register([MOODY_LABEL], [account0], [0], {from: account0}));
+        await expectAuthError(() => contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [account0], [0], {from: account0}));
       });
     });
   });
@@ -124,61 +133,61 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     });
 
     it('sets the owner', async () => {
-      await contract.register([MOODY_LABEL], [account0], [0], {from: claimant0});
+      await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [account0], [0], {from: claimant0});
       assert.equal(await ens.owner(MOODY_ETHVAULT_NODE), account0);
     });
 
     it('sets the resolver to the public resolver', async () => {
-      await contract.register([MOODY_LABEL], [account0], [0], {from: claimant0});
+      await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [account0], [0], {from: claimant0});
       assert.equal(await ens.resolver(MOODY_ETHVAULT_NODE), publicResolver.address);
     });
 
     it('sets the resolution in the public resolver', async () => {
-      await contract.register([MOODY_LABEL], [account0], [0], {from: claimant0});
+      await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [account0], [0], {from: claimant0});
       assert.equal(await publicResolver.addr(MOODY_ETHVAULT_NODE), account0);
     });
 
     it('works in bulk', async () => {
-      await contract.register([MOODY_LABEL, BOB_LABEL], [account0, account1], [0, 0], {from: claimant0});
+      await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL, BOB_LABEL], [account0, account1], [0, 0], {from: claimant0});
       assert.equal(await publicResolver.addr(MOODY_ETHVAULT_NODE), account0);
       assert.equal(await publicResolver.addr(BOB_ETHVAULT_NODE), account1);
     });
 
     it('validates each argument has the same length', async () => {
       await expectError(
-        () => contract.register([], [account0], [], {from: claimant0}),
+        () => contract.register(ETHVAULT_NAME_HASH, [], [account0], [], {from: claimant0}),
         'must pass the same number of labels and owners'
       );
 
       await expectError(
-        () => contract.register([MOODY_LABEL], [], [], {from: claimant0}),
+        () => contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [], [], {from: claimant0}),
         'must pass the same number of labels and owners'
       );
 
       await expectError(
-        () => contract.register([], [], [0], {from: claimant0}),
+        () => contract.register(ETHVAULT_NAME_HASH, [], [], [0], {from: claimant0}),
         'must pass the same number of labels and owners'
       );
 
       await expectError(
-        () => contract.register([MOODY_LABEL], [account0], [], {from: claimant0}),
+        () => contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [account0], [], {from: claimant0}),
         'must pass the same number of labels and owners'
       );
 
       await expectError(
-        () => contract.register([], [account0], [0], {from: claimant0}),
+        () => contract.register(ETHVAULT_NAME_HASH, [], [account0], [0], {from: claimant0}),
         'must pass the same number of labels and owners'
       );
 
       await expectError(
-        () => contract.register([MOODY_LABEL], [], [0], {from: claimant0}),
+        () => contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [], [0], {from: claimant0}),
         'must pass the same number of labels and owners'
       );
     });
 
     it('allows sending some value', async () => {
       const balance = await web3.eth.getBalance(account0);
-      await contract.register([MOODY_LABEL], [account0], [10], {from: claimant0, value: 10});
+      await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [account0], [10], {from: claimant0, value: 10});
       const diff = new BigNumber(await web3.eth.getBalance(account0)).minus(balance);
       assert.equal(diff.toString(), '10');
     });
@@ -187,7 +196,10 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
       const a0balance = await web3.eth.getBalance(account0);
       const a1balance = await web3.eth.getBalance(account1);
 
-      await contract.register([MOODY_LABEL, BOB_LABEL], [account0, account1], [6, 4], {from: claimant0, value: 10});
+      await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL, BOB_LABEL], [account0, account1], [6, 4], {
+        from: claimant0,
+        value: 10
+      });
 
       const a0diff = new BigNumber(await web3.eth.getBalance(account0)).minus(a0balance);
       const a1diff = new BigNumber(await web3.eth.getBalance(account1)).minus(a1balance);
@@ -199,14 +211,17 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     it('throws without enough value', async () => {
       await expectError(
         () =>
-          contract.register([MOODY_LABEL, BOB_LABEL], [account0, account1], [6, 4], {from: claimant0, value: 9}),
+          contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL, BOB_LABEL], [account0, account1], [6, 4], {
+            from: claimant0,
+            value: 9
+          }),
         'revert'
       );
     });
 
     it('returns any excess value', async () => {
       const oldBalance = await web3.eth.getBalance(claimant0);
-      const tx = await contract.register([MOODY_LABEL, BOB_LABEL], [account0, account1], [6, 4], {
+      const tx = await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL, BOB_LABEL], [account0, account1], [6, 4], {
         from: claimant0,
         value: 20,
         gasPrice: 0
@@ -216,10 +231,10 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     });
 
     it('skips sending value to already registered labels', async () => {
-      await contract.register([MOODY_LABEL], [account0], [0], {from: claimant0});
+      await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [account0], [0], {from: claimant0});
 
       const oldBalance = await web3.eth.getBalance(claimant0);
-      const tx = await contract.register([MOODY_LABEL, BOB_LABEL], [account0, account1], [6, 4], {
+      const tx = await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL, BOB_LABEL], [account0, account1], [6, 4], {
         from: claimant0,
         value: 10,
         gasPrice: 0
@@ -229,25 +244,25 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     });
 
     it('zero addresses is no op', async () => {
-      await contract.register([], [], [], {from: claimant0});
+      await contract.register(ETHVAULT_NAME_HASH, [], [], [], {from: claimant0});
     });
 
     it('does not throw on overwrite with same address', async () => {
-      await contract.register([MOODY_LABEL], [account0], [0], {from: claimant0});
-      await contract.register([MOODY_LABEL], [account0], [0], {from: claimant1});
+      await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [account0], [0], {from: claimant0});
+      await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [account0], [0], {from: claimant1});
     });
 
     it('cannot overwrite existing labels with different addresses', async () => {
-      await contract.register([MOODY_LABEL], [account0], [0], {from: claimant0});
-      await expectError(() => contract.register([MOODY_LABEL], [account1], [0], {from: claimant0}), 'the label owner may not be changed');
+      await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [account0], [0], {from: claimant0});
+      await expectError(() => contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [account1], [0], {from: claimant0}), 'the label owner may not be changed');
     });
   });
 
   describe('release', () => {
     const CURRENT_TIME = 100;
 
-    async function sign(label, timestamp, from) {
-      const signableData = await contract.getReleaseSignData(label, timestamp);
+    async function sign(label, timestamp, from, rootNode = ETHVAULT_NAME_HASH) {
+      const signableData = await contract.getReleaseSignData(rootNode, label, timestamp);
 
       return web3.eth.sign(signableData, from);
     }
@@ -257,7 +272,7 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     });
 
     beforeEach('register the moody label', async () => {
-      await contract.register([MOODY_LABEL], [account0], [0], {from: claimant0});
+      await contract.register(ETHVAULT_NAME_HASH, [MOODY_LABEL], [account0], [0], {from: claimant0});
     });
 
     beforeEach('set current time', async () => {
@@ -267,7 +282,7 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     it('sets the subnode owner to address 0', async () => {
       const validSignature = await sign(MOODY_LABEL, 120, account0);
 
-      await contract.release(MOODY_LABEL, 120, validSignature, {from: account0});
+      await contract.release(ETHVAULT_NAME_HASH, MOODY_LABEL, 120, validSignature, {from: account0});
 
       assert.equal(/^0x0{40}$/.test(await ens.owner(MOODY_ETHVAULT_NODE)), true);
     });
@@ -275,15 +290,24 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
     it('can be called by anyone', async () => {
       const validSignature = await sign(MOODY_LABEL, 120, account0);
 
-      await contract.release(MOODY_LABEL, 120, validSignature, {from: account1});
+      await contract.release(ETHVAULT_NAME_HASH, MOODY_LABEL, 120, validSignature, {from: account1});
+    });
+
+    it('cannot be called for a different root node', async () => {
+      const differentRootNodeSignature = await sign(MOODY_LABEL, 120, account0, RUSTY_SPOONS_NAMEHASH);
+
+      await expectError(
+        () => contract.release(ETHVAULT_NAME_HASH, MOODY_LABEL, 120, differentRootNodeSignature, {from: account1}),
+        'signature is not valid'
+      );
     });
 
     it('cannot be called if the timestamp is before now', async () => {
       const validSignature = await sign(MOODY_LABEL, 99, account0);
 
       await expectError(
-        () => contract.release(MOODY_LABEL, 99, validSignature),
-        'the signature has expired'
+        () => contract.release(ETHVAULT_NAME_HASH, MOODY_LABEL, 99, validSignature),
+        'signature has expired'
       );
     });
 
@@ -291,14 +315,14 @@ contract('EthvaultENSRegistrar', function ([deployer, claimant0, claimant1, acco
       const validSignatureWrongSigner = await sign(MOODY_LABEL, 120, account1);
 
       await expectError(
-        () => contract.release(MOODY_LABEL, 120, validSignatureWrongSigner),
-        'signature is not from current owner'
+        () => contract.release(ETHVAULT_NAME_HASH, MOODY_LABEL, 120, validSignatureWrongSigner),
+        'signature is not valid'
       );
     });
 
     it('is no op if already released', async () => {
       const fakeSignature = utils.sha3('fake');
-      await contract.release(BOB_LABEL, 0, fakeSignature, {from: account0});
+      await contract.release(ETHVAULT_NAME_HASH, BOB_LABEL, 0, fakeSignature, {from: account0});
     });
   });
 

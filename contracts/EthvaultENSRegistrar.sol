@@ -10,19 +10,15 @@ contract EthvaultENSRegistrar is Clock {
   bytes32 public constant RESOLVER_NODE = keccak256(abi.encodePacked(keccak256(abi.encodePacked(bytes32(0), keccak256("eth"))), keccak256("resolver")));
 
   // Emitted when a user is registered
-  event Registration(address claimant, bytes32 label, address owner, uint256 value);
+  event Registration(address claimant, bytes32 rootNode, bytes32 label, address owner, uint256 value);
 
   ENS public ens;
-
-  // The node corresponding to the root ENS domain that will be registered
-  bytes32 public rootNode;
 
   // The addresses that may claim ENS subdomains for the given node
   mapping(address => bool) public isClaimant;
 
-  constructor(ENS _ens, bytes32 _rootNode) public {
+  constructor(ENS _ens) public {
     ens = _ens;
-    rootNode = _rootNode;
 
     isClaimant[msg.sender] = true;
   }
@@ -46,18 +42,21 @@ contract EthvaultENSRegistrar is Clock {
   // Remove claimants from the set.
   function removeClaimants(address[] calldata claimants) external claimantOnly {
     for (uint i = 0; i < claimants.length; i++) {
+      if (claimants[i] == msg.sender) {
+        revert("cannot remove self");
+      }
       isClaimant[claimants[i]] = false;
     }
   }
 
   // Compute the namehash from the label and the root node.
-  function namehash(bytes32 label) view public returns (bytes32) {
+  function namehash(bytes32 rootNode, bytes32 label) view public returns (bytes32) {
     return keccak256(abi.encodePacked(rootNode, label));
   }
 
   // Get the data that the user should sign to release a name.
-  function getReleaseSignData(bytes32 label, uint256 expirationTimestamp) pure public returns (bytes32) {
-    return keccak256(abi.encodePacked(label, expirationTimestamp));
+  function getReleaseSignData(bytes32 rootNode, bytes32 label, uint256 expirationTimestamp) pure public returns (bytes32) {
+    return keccak256(abi.encodePacked(rootNode, label, expirationTimestamp));
   }
 
   /**
@@ -127,8 +126,8 @@ contract EthvaultENSRegistrar is Clock {
    * @param expirationTimestamp The timestamp for when the signature to release the label expires
    * @param signature The signature of the label and expiration timestamp
    */
-  function release(bytes32 label, uint256 expirationTimestamp, bytes calldata signature) external {
-    bytes32 subnode = namehash(label);
+  function release(bytes32 rootNode, bytes32 label, uint256 expirationTimestamp, bytes calldata signature) external {
+    bytes32 subnode = namehash(rootNode, label);
 
     address currentOwner = ens.owner(subnode);
 
@@ -138,7 +137,7 @@ contract EthvaultENSRegistrar is Clock {
     }
 
     address signer = recover(
-      toEthSignedMessageHash(getReleaseSignData(label, expirationTimestamp)),
+      toEthSignedMessageHash(getReleaseSignData(rootNode, label, expirationTimestamp)),
       signature
     );
 
@@ -147,11 +146,11 @@ contract EthvaultENSRegistrar is Clock {
     }
 
     if (signer != currentOwner) {
-      revert("signature is not from current owner");
+      revert("signature is not valid");
     }
 
     if (expirationTimestamp < getTime()) {
-      revert("the signature has expired");
+      revert("signature has expired");
     }
 
     ens.setSubnodeOwner(rootNode, label, address(0));
@@ -178,11 +177,12 @@ contract EthvaultENSRegistrar is Clock {
   /**
    * Register a subdomain name, sets the resolver, updates the resolver, and sets the address of the resolver to the
    * new owner. Also transfers any additional value to each address.
+   * @param rootNode The domain node for which the label should be registered as a subnode
    * @param labels The hashes of the label to register
    * @param owners The addresses of the new owners
    * @param values The WEI values to send to each address
    */
-  function register(bytes32[] calldata labels, address payable[] calldata owners, uint256[] calldata values) external payable claimantOnly {
+  function register(bytes32 rootNode, bytes32[] calldata labels, address payable[] calldata owners, uint256[] calldata values) external payable claimantOnly {
     if (labels.length != owners.length || owners.length != values.length) {
       revert("must pass the same number of labels and owners");
     }
@@ -190,12 +190,13 @@ contract EthvaultENSRegistrar is Clock {
     uint256 dispersedTotal = 0;
 
     for (uint i = 0; i < owners.length; i++) {
-      bytes32 label = labels[i];
       address payable owner = owners[i];
-      uint256 value = values[i];
+      if (owner == address(0)) {
+        continue;
+      }
 
       // Compute the subnode hash
-      bytes32 subnode = namehash(label);
+      bytes32 subnode = namehash(rootNode, labels[i]);
 
       // Get the current owner of this subnode
       address currentOwner = ens.owner(subnode);
@@ -213,7 +214,7 @@ contract EthvaultENSRegistrar is Clock {
       Resolver publicResolver = getPublicResolver();
 
       // First set it to this, so we can update it.
-      ens.setSubnodeOwner(rootNode, label, address(this));
+      ens.setSubnodeOwner(rootNode, labels[i], address(this));
 
       // Set the resolver for the subnode to the public resolver
       ens.setResolver(subnode, address(publicResolver));
@@ -222,14 +223,14 @@ contract EthvaultENSRegistrar is Clock {
       publicResolver.setAddr(subnode, owner);
 
       // Finally pass ownership to the new owner.
-      ens.setSubnodeOwner(rootNode, label, owner);
+      ens.setSubnodeOwner(rootNode, labels[i], owner);
 
-      if (value > 0) {
-        dispersedTotal = dispersedTotal + value;
-        owner.transfer(value);
+      if (values[i] > 0) {
+        dispersedTotal = dispersedTotal + values[i];
+        owner.transfer(values[i]);
       }
 
-      emit Registration(msg.sender, label, owner, value);
+      emit Registration(msg.sender, rootNode, labels[i], owner, values[i]);
     }
 
     if (dispersedTotal < msg.value) {
